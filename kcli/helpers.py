@@ -438,4 +438,9 @@ def clean_resource_data(resource_type: ResourceType, resource_data: dict):
     elif resource_type == ResourceType.SEGMENT:
         del resource_data['attributes']['is_active']
         del resource_data['attributes']['is_processing']
-    del resource_data['attributes']['updated']
+
+    if resource_type == ResourceType.CAMPAIGN:
+        del resource_data['attributes']['updated_at']
+    else:
+        del resource_data['attributes']['updated']
+
