@@ -1,4 +1,5 @@
 import copy
+import csv
 import datetime
 import json
 import os
@@ -7,13 +8,15 @@ import typing
 import rich_click as click
 import openapi_client
 import survey
+from openapi_client import SegmentValuesRequestDTO, SegmentSeriesRequestDTO, CampaignValuesRequestDTO, \
+    FlowValuesRequestDTO, FlowSeriesRequestDTO, FormValuesRequestDTO, FormSeriesRequestDTO
 from rich.table import Table
 from rich.console import Console
 from klaviyo_api import KlaviyoAPI
 from openapi_client.api_arg_options import USE_DICTIONARY_FOR_RESPONSE_DATA
 
-from kcli.constants import OverwriteMode, ResourceType, TABLE_INDENT, TABLE_HEADER_HEIGHT, TABLE_FOOTER_HEIGHT, \
-    DATETIME_LENGTH
+from kcli.constants import OverwriteMode, ResourceType, TABLE_HEADER_HEIGHT, TABLE_FOOTER_HEIGHT, \
+    DATETIME_LENGTH, CHOOSE_TABLE_INDENT, BASKET_TABLE_INDENT, ReportResource, ReportType
 
 
 class KCLIState(object):
@@ -214,10 +217,10 @@ class KCLIState(object):
         self.write_data_to_file(resource_type, response['data'], resource_file)
         click.secho(f'Done writing updated {resource_type.value} definition to Klaviyo.', bold=True)
 
-    def inspect_resource(self, resource_type, resource_path, resource_file, resource_id):
+    def inspect_resource(self, resource_type: ResourceType, resource_path: str, resource_file: str, resource_id: str):
         resource_file = resource_filename(resource_type, resource_path, resource_file, resource_id)
         self.verbose_echo(
-            f'Reading {resource_type.value} definition from {"stdin" if resource_file == "-" else resource_file}',
+            f'Reading {resource_type.value} definition from {format_filename(resource_file)}.',
             bold=True)
         resource_data = read_resource_file(resource_file, resource_path)
         if resource_data is None:
@@ -249,9 +252,10 @@ class KCLIState(object):
         rich_console = Console()
         rich_console.print(table)
 
-    def delete_resource(self, resource_type, resource_id):
-        warning = click.style(f'Are you sure you want to delete {resource_type.value} {resource_id} from your Klaviyo account? This cannot be undone. ',
-                              fg='red')
+    def delete_resource(self, resource_type: ResourceType, resource_id: str):
+        warning = click.style(
+            f'Are you sure you want to delete {resource_type.value} {resource_id} from your Klaviyo account? This cannot be undone. ',
+            fg='red')
         click.confirm(warning, abort=True)
         if resource_type == ResourceType.SEGMENT:
             self.klaviyo.Segments.delete_segment(resource_id)
@@ -264,6 +268,38 @@ class KCLIState(object):
         else:
             raise ValueError('Unsupported resource type.')
         click.echo(f'Deleted {resource_type.value} {resource_id}.')
+
+    def report(self, report_resource: ReportResource, report_type: ReportType, statistics: list[str], path: str, timeframe: str,
+               resource_id: str, interval: str|None, conversion_metric_id: str|None, group_by: str|None):
+        report_data = format_report_query_data(report_resource, report_type, statistics, resource_id,
+                                               conversion_metric_id, timeframe, interval, group_by)
+        if report_resource == ReportResource.CAMPAIGN:
+            request_dto = CampaignValuesRequestDTO(data=report_data)
+            result_data = self.klaviyo.Reporting.query_campaign_values(request_dto)['data']
+        elif report_resource == ReportResource.SEGMENT:
+            if report_type == ReportType.VALUES:
+                request_dto = SegmentValuesRequestDTO(data=report_data)
+                result_data = self.klaviyo.Reporting.query_segment_values(request_dto)['data']
+            else:
+                request_dto = SegmentSeriesRequestDTO(data=report_data)
+                result_data = self.klaviyo.Reporting.query_segment_series(request_dto)['data']
+        elif report_resource == ReportResource.FLOW:
+            if report_type == ReportType.VALUES:
+                request_dto = FlowValuesRequestDTO(data=report_data)
+                result_data = self.klaviyo.Reporting.query_flow_values(request_dto)['data']
+            else:
+                request_dto = FlowSeriesRequestDTO(data=report_data)
+                result_data = self.klaviyo.Reporting.query_flow_series(request_dto)['data']
+        elif report_resource == ReportResource.FORM:
+            if report_type == ReportType.VALUES:
+                request_dto = FormValuesRequestDTO(data=report_data)
+                result_data = self.klaviyo.Reporting.query_form_values(request_dto)['data']
+            else:
+                request_dto = FormSeriesRequestDTO(data=report_data)
+                result_data = self.klaviyo.Reporting.query_form_series(request_dto)['data']
+        else:
+            raise ValueError('Unsupported report resource')
+        write_report_results(result_data, path, report_type, report_resource, resource_id)
 
     def campaign_audience_prompt(self):
         """Prompts user to select the lists and segments to include and exclude from a campaign"""
@@ -285,6 +321,25 @@ class KCLIState(object):
         included = [groups_data[i]['id'] for i in included_indices]
         excluded = [groups_data[i]['id'] for i in excluded_indices]
         return {'included': included, 'excluded': excluded}
+
+    def conversion_metric_prompt(self):
+        """Prompts user to choose which metric to use to calculate conversion statistics"""
+        if survey.routines.select('How do you want to specify the metric to use to calculate conversion statistics? ',
+                                  options=['Choose the metric to use from your account', 'Type in the metric ID']) == 0:
+            self.verbose_echo('Retrieving metrics...')
+            metrics_data = self.get_all_pages(self.klaviyo.Metrics.get_metrics)
+            metrics_table = Table(title='Choose the metric to use to calculate conversion statistics', width=100)
+            for parameter in ['ID', 'Name', 'Created', 'Updated', 'Integration']:
+                metrics_table.add_column(parameter, no_wrap=True, max_width=25)
+            for metric_data in metrics_data:
+                metrics_table.add_row(metric_data['id'], metric_data['attributes']['name'],
+                                      metric_data['attributes']['created'][:DATETIME_LENGTH],
+                                      metric_data['attributes']['updated'][:DATETIME_LENGTH],
+                                      metric_data['attributes']['integration']['name'])
+            index = table_query_prompt(metrics_table, False)
+            return metrics_data[index]['id']
+        else:
+            return survey.routines.input('Conversion metric id: ')
 
 
 def resource_filename(resource_type: ResourceType, resource_path: str, resource_file: str | None, resource_id: str | None):
@@ -395,24 +450,42 @@ def campaign_tracking_prompt(message_channel: str):
     return tracking_options
 
 
-def table_query_prompt(table: Table):
-    """Prompts user to select rows from a table, returns indices"""
+def statistics_prompt(statistics: list[str]):
+    """Prompts user to select the statistics to include in a report"""
+    indices = []
+    while len(indices) == 0:
+        indices = survey.routines.basket(options=statistics,
+                                         show='Choose any number of statistics to include in the report: ')
+        if len(indices) == 0:
+            click.secho('You must select at least one statistic to include in the report', fg='red')
+    return [statistics[i] for i in indices]
+
+
+def table_query_prompt(table: Table, choose_multiple: bool = True):
+    """Prompts user to select rows from a table, returns selected index or indices"""
     rich_console = Console()
+    indent = BASKET_TABLE_INDENT if choose_multiple else CHOOSE_TABLE_INDENT
     with rich_console.capture() as capture:
         rich_console.print(table)
     rendered_table = capture.get().split('\n')
-    table_header = '\n'.join([' ' * TABLE_INDENT + line for line in rendered_table[:TABLE_HEADER_HEIGHT]]) + '\n'
-    table_footer = '\n'.join([' ' * TABLE_INDENT + line for line in rendered_table[-TABLE_FOOTER_HEIGHT:]])
-    indices = survey.routines.basket(options=rendered_table[TABLE_HEADER_HEIGHT:-TABLE_FOOTER_HEIGHT], permit=True,
-                                     show=table_header, search=table_search, reply=None)
-    table_contents = [' ' * TABLE_INDENT + line for line in rendered_table[TABLE_HEADER_HEIGHT:-TABLE_FOOTER_HEIGHT]]
+    table_header = '\n'.join([' ' * indent + line for line in rendered_table[:TABLE_HEADER_HEIGHT]]) + '\n'
+    table_footer = '\n'.join([' ' * indent + line for line in rendered_table[-TABLE_FOOTER_HEIGHT:]])
+    if choose_multiple:
+        index = None
+        indices = survey.routines.basket(options=rendered_table[TABLE_HEADER_HEIGHT:-TABLE_FOOTER_HEIGHT], permit=True,
+                                         show=table_header, search=table_search, reply=None)
+    else:
+        index = survey.routines.select(options=rendered_table[TABLE_HEADER_HEIGHT:-TABLE_FOOTER_HEIGHT], permit=True,
+                                       show=table_header, search=table_search, reply=None)
+        indices = [index]
+    table_contents = [' ' * indent + line for line in rendered_table[TABLE_HEADER_HEIGHT:-TABLE_FOOTER_HEIGHT]]
     for i in indices:
         click.echo(table_contents[i])
     click.echo(table_footer)
-    return indices
+    return indices if choose_multiple else index
 
 
-def table_search(argument, tile, get=None):
+def table_search(argument, tile, get=lambda tile: tile.sketch(False, False)):
     """Custom search for case-insensitive exact match of each word in filter string, see survey/survey/_searches.py"""
     lines, point = get(tile)
     line = ''.join(lines[0]).lower()
@@ -420,6 +493,66 @@ def table_search(argument, tile, get=None):
     if all(argument in line for argument in arguments):
         return 1
     return None
+
+
+def format_report_query_data(report_resource: ReportResource, report_type: ReportType, report_statistics: list[str],
+                             resource_id: str, conversion_metric_id: str|None, timeframe: str, interval: str|None,
+                             group_by: str|None):
+    data = {
+        'type': f'{report_resource.value}-{report_type.value}-report',
+        'attributes': {
+            'statistics': report_statistics,
+            'timeframe': {
+                'key': timeframe,
+            },
+            'filter': f'equals({report_resource.value}_id,"{resource_id}")',
+        }
+    }
+    if report_type == ReportType.SERIES:
+        data['attributes']['interval'] = interval
+    if conversion_metric_id:
+        data['attributes']['conversion_metric_id'] = conversion_metric_id
+    if group_by == 'form_version_id':
+        data['attributes']['group_by'] = ['form_id', 'form_version_id']
+    return data
+
+
+def write_report_results(data: dict, path: str, report_type: ReportType, report_resource: ReportResource, resource_id: str):
+    if len(data['attributes']['results']) == 0:
+        click.echo('No results found with the requested report parameters')
+        return
+    filename = f'{report_resource.value}-{report_type.value}-{resource_id}-{datetime.datetime.now()}.csv'
+    filename = os.path.join(path, f'{report_resource.value}s', filename)
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    column_headings = []
+    datetimes = []
+    if 'date_times' in data['attributes']:
+        column_headings.append('date_time')
+        datetimes = data['attributes']['date_times']
+    for key in data['attributes']['results'][0]['groupings']:
+        column_headings.append(f'groupings["{key}"]')
+    for key in data['attributes']['results'][0]['statistics']:
+        column_headings.append(key)
+    with open(filename, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(column_headings)
+        for result in data['attributes']['results']:
+            if datetimes:
+                for i, time in enumerate(datetimes):
+                    row = [time]
+                    for key in result['groupings']:
+                        row.append(result['groupings'][key])
+                    for key in result['statistics']:
+                        row.append(result['statistics'][key][i])
+                    writer.writerow(row)
+            else:
+                row = []
+                for key in result['groupings']:
+                    row.append(result['groupings'][key])
+                for key in result['statistics']:
+                    row.append(result['statistics'][key])
+                writer.writerow(row)
+    click.echo(f'Report written to {format_filename(filename)}.')
 
 
 def style_prompt_string(message):
@@ -443,4 +576,3 @@ def clean_resource_data(resource_type: ResourceType, resource_data: dict):
         del resource_data['attributes']['updated_at']
     else:
         del resource_data['attributes']['updated']
-

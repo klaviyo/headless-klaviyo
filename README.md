@@ -162,6 +162,18 @@ To delete the segment with ID `R6qs5F`:
 klaviyo delete segment R6qs5F
 ```
 
+## `report`
+
+The `report` command creates a report about a Klaviyo resource. The supported subcommands are `campaign`, `flow`, `form`, and `segment`.
+
+The subcommand name should be followed by the resource ID of the resource to report on. These commands will prompt you for parameters that are not provided as command options. For example, the following command will create a report about the campaign with ID `01J9SCZKEP89D14YCP2X97CZZ1` over the last 12 months, and will interactively prompt you to select the statistics for the report, as well as the metric used to calculate conversion statistics:
+
+```bash
+klaviyo report campaign 01J9SCZKEP89D14YCP2X97CZZ1 --timeframe last_12_months
+```
+
+The report output will be stored as a CSV (Comma Separated Values) file including the selected statistics, and for series reports, the timestamps for each interval. The folder to use to store the reports can be specified with the `--report-path` option. The output file name will include the timestamp of the report creation, and new reports will create new files rather than overwrite existing reports.
+
 ## About resource definition files
 
 The resource definition files stored by these commands generally match the format of the `data` section of the `json:api` payload used for interacting with the Klaviyo API. For specifics on the formats of these resource definitions, refer to the [Klaviyo API documentation](https://developers.klaviyo.com/en/reference/). For example, the `campaign` data model is described in the [Campaigns API overview](https://developers.klaviyo.com/en/reference/campaigns_api_overview).

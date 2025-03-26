@@ -5,9 +5,10 @@ import rich_click as click
 import survey
 
 from kcli.constants import CAMPAIGN_CHANNELS, CAMPAIGN_GENERATE_CHANNELS, OverwriteMode, ResourceType, BLOCK_TYPES, \
-    BLOCK_DISPLAY_OPTIONS
+    BLOCK_DISPLAY_OPTIONS, REPORT_TIMEFRAME_OPTIONS, REPORT_INTERVAL_OPTIONS, ReportResource, \
+    REPORT_STATISTICS, ReportType, REPORT_GROUP_BY_OPTIONS
 from kcli.helpers import KCLIState, style_prompt_string, campaign_send_strategy_prompt, campaign_tracking_prompt, \
-    format_filename
+    format_filename, statistics_prompt
 
 click.rich_click.SHOW_ARGUMENTS = True
 click.rich_click.MAX_WIDTH = 120
@@ -127,6 +128,7 @@ def read_options(resource_type: ResourceType, include_id_option: bool = True):
 
 def campaign_audience_option(f):
     """Option to specify which lists/segments to include and exclude from a campaign audience"""
+
     def callback(context, parameter, value):
         if not value:
             return context.obj.campaign_audience_prompt()
@@ -148,6 +150,7 @@ def campaign_audience_option(f):
 
 def campaign_message_channel_option(f):
     """Option to specify whether a campaign definition is for email or SMS"""
+
     def callback(context, parameter, value):
         if not value:
             value = CAMPAIGN_GENERATE_CHANNELS[survey.routines.select('Select the message channel for the campaign: ',
@@ -161,6 +164,7 @@ def campaign_message_channel_option(f):
 
 def campaign_send_strategy_option(f):
     """Option for specifying the campaign sending strategy and schedule"""
+
     def callback(context, parameter, value):
         if not value:
             return campaign_send_strategy_prompt()
@@ -173,6 +177,7 @@ def campaign_send_strategy_option(f):
 
 def campaign_tracking_option(f):
     """Option for specifying campaign tracking parameters and whether email clicks/opens should be tracked"""
+
     def callback(context, parameter, value):
         if not value:
             return campaign_tracking_prompt(context.obj.message_channel)
@@ -182,6 +187,8 @@ def campaign_tracking_option(f):
 
 
 def campaign_email_label_option(f):
+    """Option for specifying campaign email labels"""
+
     def callback(context, parameter, value):
         if context.obj.message_channel != 'email':
             return None
@@ -194,6 +201,8 @@ def campaign_email_label_option(f):
 
 
 def campaign_email_subject_option(f):
+    """Option for specifying email campaign subject"""
+
     def callback(context, parameter, value):
         if context.obj.message_channel != 'email':
             return None
@@ -206,6 +215,8 @@ def campaign_email_subject_option(f):
 
 
 def campaign_email_preview_text_option(f):
+    """Option for specifying email campaign preview text"""
+
     def callback(context, parameter, value):
         if context.obj.message_channel != 'email':
             return None
@@ -218,6 +229,8 @@ def campaign_email_preview_text_option(f):
 
 
 def campaign_sms_body_option(f):
+    """Option for specifying body text for SMS campaigns"""
+
     def callback(context, parameter, value):
         if context.obj.message_channel != 'sms':
             return None
@@ -231,6 +244,8 @@ def campaign_sms_body_option(f):
 
 
 def block_type_option(f):
+    """Option for specifying text or HTML for universal content blocks"""
+
     def callback(context, parameter, value):
         if not value:
             value = BLOCK_TYPES[
@@ -242,6 +257,8 @@ def block_type_option(f):
 
 
 def block_display_option(f):
+    """Option for specifying which devices should display a universal content block"""
+
     def callback(context, parameter, value):
         if not value:
             value = BLOCK_DISPLAY_OPTIONS[survey.routines.select('On which devices should the block be displayed?  ',
@@ -250,6 +267,124 @@ def block_display_option(f):
 
     return click.option('--display', help='Where the block should display', type=click.Choice(BLOCK_DISPLAY_OPTIONS),
                         callback=callback)(f)
+
+
+def report_statistics_option(report_resource: ReportResource):
+    """Option for specifying which statistics to include in a campaign"""
+
+    def decorator(f):
+        def callback(context, parameter, value):
+            if not value:
+                return statistics_prompt(REPORT_STATISTICS[report_resource])
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                if value == 'all':
+                    return REPORT_STATISTICS[report_resource]
+                return value
+
+        return click.option('--report-statistics',
+                            help=f'{report_resource.value.capitalize()} statistics to report on. Accepts "all", an individual statistic, or array of statistics',
+                            callback=callback)(f)
+
+    return decorator
+
+
+def conversion_metric_option(f):
+    """Option for specifying which metric to use to calculate conversion related statistics"""
+
+    def callback(context, parameter, value):
+        if not value:
+            return context.obj.conversion_metric_prompt()
+        return value
+
+    return click.option('--conversion-metric-id',
+                        help='Metric ID to use to calculate conversion statistics',
+                        callback=callback)(f)
+
+
+def report_timeframe_option(f):
+    """Option for specifying the timeframe for a report"""
+
+    def callback(context, parameter, value):
+        if not value:
+            return REPORT_TIMEFRAME_OPTIONS[survey.routines.select('Select the timeframe for the report: ',
+                                                                   options=REPORT_TIMEFRAME_OPTIONS)]
+        return value
+
+    return click.option('--timeframe', help='The timeframe for the report',
+                        type=click.Choice(REPORT_TIMEFRAME_OPTIONS), callback=callback)(f)
+
+
+def report_path_option(f):
+    """Option for specifying the path to store generated reports"""
+    return click.option('--report-path',
+                        default=os.path.join(os.getcwd(), 'reports'),
+                        type=click.Path(file_okay=False), envvar='KLAVIYO_REPORTS_PATH',
+                        help='Directory to use to store reports',
+                        show_default=True, show_envvar=True)(f)
+
+
+def report_type_option(f):
+    """Option for specifying whether a series or value report should be generated"""
+    report_type_values = [report_type.value for report_type in ReportType]
+
+    def callback(context, parameter, value):
+        if not value:
+            value = report_type_values[survey.routines.select('Should the report be a series or value report? ',
+                                                        options=report_type_values)]
+        context.obj.report_type = ReportType(value)
+        return context.obj.report_type
+
+    return click.option('--report-type', help='Type of report', type=click.Choice(report_type_values),
+                        callback=callback)(f)
+
+
+def report_interval_option(f):
+    """Option for specifying the interval for a series report. Not applicable to values reports"""
+
+    def callback(context, parameter, value):
+        if context.obj.report_type != ReportType.SERIES:
+            return None
+        if not value:
+            return REPORT_INTERVAL_OPTIONS[survey.routines.select('What interval should be used for the series report? ',
+                                                                  options=REPORT_INTERVAL_OPTIONS)]
+        return value
+
+    return click.option('--interval', help='Interval (series reports only)', type=click.Choice(REPORT_INTERVAL_OPTIONS),
+                        callback=callback)(f)
+
+
+def report_group_by_option(f):
+    """Option for specifying the how to group the results for a form report"""
+
+    def callback(context, parameter, value):
+        if not value:
+            return REPORT_GROUP_BY_OPTIONS[survey.routines.select('How should the report results be grouped? ',
+                                                                  options=REPORT_GROUP_BY_OPTIONS)]
+        return value
+
+    return click.option('--group-by', help='How to group report results', type=click.Choice(REPORT_GROUP_BY_OPTIONS),
+                        callback=callback)(f)
+
+
+def report_options(report_resource: ReportResource):
+    """Options relevant to report command"""
+
+    def decorator(f):
+        if report_resource == ReportResource.FORM:
+            f = report_group_by_option(f)
+        if report_resource != ReportResource.CAMPAIGN:
+            f = report_interval_option(f)
+            f = report_type_option(f)
+        if report_resource in [ReportResource.CAMPAIGN, ReportResource.FLOW]:
+            f = conversion_metric_option(f)
+        f = report_statistics_option(report_resource)(f)
+        f = report_timeframe_option(f)
+        f = report_path_option(f)
+        return f
+
+    return decorator
 
 
 @click.group
@@ -567,7 +702,8 @@ def generate_block(context, block_path: str, name: str, block_type: str, display
     if block_type == 'text':
         block_data['attributes']['definition']['data']['styles'] = {}
     block_file = context.obj.write_generated_data_to_file(ResourceType.UNIVERSAL_CONTENT_BLOCK, block_data, block_path)
-    click.echo(f'Generated block definition written to {format_filename(block_file)}. Edit that file to add {"styles and " if block_type == "text" else ""}content.')
+    click.echo(
+        f'Generated block definition written to {format_filename(block_file)}. Edit that file to add {"styles and " if block_type == "text" else ""}content.')
 
 
 @cli.group
@@ -656,6 +792,61 @@ def delete_flow(context, flow_id: str):
 def delete_segment(context, segment_id: str):
     """Delete a segment from Klaviyo"""
     context.obj.delete_resource(ResourceType.SEGMENT, segment_id)
+
+
+@cli.group
+@click.pass_context
+def report(context):
+    """Generate a report file"""
+    pass
+
+
+@report.command(name='campaign')
+@common_options
+@report_options(ReportResource.CAMPAIGN)
+@click.argument('campaign_id')
+@click.pass_context
+def report_campaign(context, report_statistics: list[str], conversion_metric_id: str, report_path: str, timeframe: str,
+                    campaign_id: str):
+    """Generate a report file about campaign performance data. Provides interactive prompts for parameters not provided via command line options."""
+    context.obj.report(ReportResource.CAMPAIGN, ReportType.VALUES, report_statistics, report_path, timeframe,
+               campaign_id, None, conversion_metric_id, None)
+
+
+@report.command(name='flow')
+@common_options
+@report_options(ReportResource.FLOW)
+@click.argument('flow_id')
+@click.pass_context
+def report_flow(context, report_type: ReportType, report_statistics: list[str], conversion_metric_id: str,
+                report_path: str, timeframe: str, flow_id: str, interval: str):
+    """Generate a report file about flow performance data. Provides interactive prompts for parameters not provided via command line options."""
+    context.obj.report(ReportResource.FLOW, report_type, report_statistics, report_path, timeframe, flow_id, interval,
+                       conversion_metric_id, None)
+
+
+@report.command(name='form')
+@common_options
+@report_options(ReportResource.FORM)
+@click.argument('form_id')
+@click.pass_context
+def report_flow(context, report_type: ReportType, report_statistics: list[str],
+                report_path: str, timeframe: str, form_id: str, interval: str, group_by: str):
+    """Generate a report file about form performance data. Provides interactive prompts for parameters not provided via command line options."""
+    context.obj.report(ReportResource.FORM, report_type, report_statistics, report_path, timeframe, form_id, interval,
+                       None, group_by)
+
+
+@report.command(name='segment')
+@common_options
+@report_options(ReportResource.SEGMENT)
+@click.argument('segment_id')
+@click.pass_context
+def report_segment(context, report_type: ReportType, report_statistics: list[str], report_path: str, timeframe: str,
+                   segment_id: str, interval: str):
+    """Generate a report file about segment membership data. Provides interactive prompts for parameters not provided via command line options."""
+    context.obj.report(ReportResource.SEGMENT, report_type, report_statistics, report_path, timeframe, segment_id,
+                       interval, None, None)
 
 
 if __name__ == '__main__':
