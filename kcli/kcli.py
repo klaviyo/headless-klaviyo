@@ -453,8 +453,15 @@ def get_universal_content_block(context, block_id: str, block_path: str, overwri
 @click.pass_context
 def get_flows(context, flow_path: str, overwrite_mode: OverwriteMode):
     """Retrieve flow definitions and store them to files"""
+    def get_flows_with_definition(**kwargs):
+        flows = context.obj.klaviyo.Flows.get_flows(**kwargs)
+        for i, flow in enumerate(flows['data']):
+            context.obj.verbose_echo(f'Retrieving definition data for flow {flow["id"]}')
+            flows['data'][i] = context.obj.klaviyo.Flows.get_flow(flow['id'], additional_fields_flow=['definition'])['data']
+        return flows
+
     context.obj.info_message('Retrieving flow definitions...', bold=True)
-    flows_data = context.obj.get_all_pages(context.obj.klaviyo.Flows.get_flows)
+    flows_data = context.obj.get_all_pages(get_flows_with_definition)
     context.obj.write_resource_data_list(flows_data, ResourceType.FLOW, flow_path, overwrite_mode)
 
 
@@ -466,7 +473,7 @@ def get_flows(context, flow_path: str, overwrite_mode: OverwriteMode):
 def get_flow(context, flow_id: str, flow_path: str, overwrite_mode: OverwriteMode):
     """Retrieve flow definition for a given flow ID"""
     context.obj.info_message(f'Retrieving flow with id {flow_id} ...', bold=True)
-    flow = context.obj.klaviyo.Flows.get_flow(flow_id)
+    flow = context.obj.klaviyo.Flows.get_flow(flow_id, additional_fields_flow=['definition'])
     context.obj.write_resource_data_list(flow['data'], ResourceType.FLOW, flow_path, overwrite_mode)
 
 

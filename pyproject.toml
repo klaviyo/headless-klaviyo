@@ -1,6 +1,6 @@
 [project]
 name = "headless-klaviyo"
-version = "0.2.0"
+version = "0.2.1"
 description = "Command line interface for interacting with Klaviyo resources"
 authors = [
     {name = "Klaviyo Developer Experience Team", email = "developers@klaviyo.com"},
