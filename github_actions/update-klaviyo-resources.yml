@@ -1,0 +1,54 @@
+name: Update Klaviyo Resources
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  sync:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    env:
+      KLAVIYO_API_KEY: ${{ secrets.klaviyo_api_key }}
+    steps:
+      - name: Checkout resource definitions
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Install Klaviyo CLI
+        run: pipx install headless-klaviyo
+      - name: Create added files
+        run: |
+          for resource_type in block campaign flow segment
+          do
+            echo "Checking for newly created ${resource_type}s..."
+            git diff --diff-filter A --name-only -r ${{ github.event.pull_request.base.sha }} HEAD -- ${resource_type}s | xargs -r -t -I {} klaviyo create ${resource_type} --${resource_type}-file {}
+          done
+      - name: Update modified files
+        run: |
+          for resource_type in block campaign flow segment
+          do
+            echo "Checking for updated ${resource_type}s..."
+            git diff --diff-filter M --name-only -r ${{ github.event.pull_request.base.sha }} HEAD -- ${resource_type}s | xargs -r -t -I {} klaviyo update ${resource_type} --${resource_type}-file {}
+          done
+      - name: Determine if resource definitions changed after execution
+        id: status_after_execution
+        run: |
+          if [[ -z "$(git status -s)" ]]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+      - name: Push changed files
+        if: steps.status_after_execution.outputs.changed
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m 'Automated Klaviyo resource definition sync'
+          git push
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

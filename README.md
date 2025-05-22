@@ -202,6 +202,9 @@ If you would like to create a new resource that is a copy of an existing resourc
 cat segments/segment-R6qs5F.json | sed '/"id": /d' | klaviyo create segment
 ```
 
+# GitHub actions
+If you are interested in managing changes to resource definitions files with GitHub pull requests, there is a GitHub action available to do so. See the readme [here](github_actions/README.md) for more information.
+
 # Development setup
 
 If you want to make changes to the program or contribute changes, you can set it up for local development.
