@@ -1,0 +1,849 @@
+{
+    "abs": {
+        "prefix": "|abs",
+        "description": "Given a number, returns its absolute value.",
+        "body": [
+            "{{ -1.2|abs }} \n"
+        ]
+    },
+    "add": {
+        "prefix": "|add",
+        "description": "Adds the argument to the value.",
+        "body": [
+            "{{ value|add:\"2\" }}"
+        ]
+    },
+    "addslashes": {
+        "prefix": "|addslashes",
+        "description": "Adds slashes before quotes. Useful for escaping strings in CSV, for example.",
+        "body": [
+            "{{ value|addslashes }}"
+        ]
+    },
+    "append": {
+        "prefix": "|append",
+        "description": "Given a string, returns a string with the target string appended to the end.",
+        "body": [
+            "{{ \"hello\"|append:\" world\" }} \n"
+        ]
+    },
+    "at_least": {
+        "prefix": "|at_least",
+        "description": "Given a number, returns the maximum of the number and the target value.",
+        "body": [
+            "{{ 1|at_least:5.0 }} \n"
+        ]
+    },
+    "at_most": {
+        "prefix": "|at_most",
+        "description": "Given a number, returns the minimum of the number and the target value.",
+        "body": [
+            "{{ 1|at_most:-1.0 }} \n"
+        ]
+    },
+    "base64_decode": {
+        "prefix": "|base64_decode",
+        "description": "Decodes the input from Base-64 format.",
+        "body": [
+            "{{ 'a2xhdml5bw=='|base64_decode }}"
+        ]
+    },
+    "base64_encode": {
+        "prefix": "|base64_encode",
+        "description": "Encodes the input in Base-64 format. A common use case is encoding an email address, so it can be passed within a UTM parameter.",
+        "body": [
+            "{{ 'hello'|base64_encode }}"
+        ]
+    },
+    "base64_url_safe_decode": {
+        "prefix": "|base64_url_safe_decode",
+        "description": "Decodes the input from Base-64 format with URL-safe characters.",
+        "body": [
+            "{{ 'a2xhdml5bw=='|base64_url_safe_decode }}"
+        ]
+    },
+    "base64_url_safe_encode": {
+        "prefix": "|base64_url_safe_encode",
+        "description": "Encodes the input in Base-64 format with URL-safe characters. Any encoded + will be replaced with - and any / will be replaced with _.",
+        "body": [
+            "{{ 'https://mysite.com'|base64_url_safe_encode }}"
+        ]
+    },
+    "capfirst": {
+        "prefix": "|capfirst",
+        "description": "Capitalizes the first character of the value. If the first character is not\na letter, this filter has no effect.",
+        "body": [
+            "{{ value|capfirst }}"
+        ]
+    },
+    "capitalize": {
+        "prefix": "|capitalize",
+        "description": "Given a string, returns it with the first character in uppercase.",
+        "body": [
+            "{{ 'klaviyo'|capitalize }}"
+        ]
+    },
+    "ceil": {
+        "prefix": "|ceil",
+        "description": "Given a number, rounds it up to the nearest integer.",
+        "body": [
+            "{{ 5.01|ceil }}"
+        ]
+    },
+    "center": {
+        "prefix": "|center",
+        "description": "Centers the value in a field of a given width.",
+        "body": [
+            "\"{{ value|center:\"15\" }}\"\n"
+        ]
+    },
+    "compact": {
+        "prefix": "|compact",
+        "description": "Given a list, returns a list without any undefined (None) elements.",
+        "body": [
+            "{{ [{\"name\":\"a\"},None,None,None,{\"name\":\"b\"}]|compact }} \n"
+        ]
+    },
+    "concat": {
+        "prefix": "|concat",
+        "description": "Given a string or list, returns a string or list with the target value appended to the end.",
+        "body": [
+            "{{ [1,2,3]|concat:[4,5,6] }} \n"
+        ]
+    },
+    "count": {
+        "prefix": "|count",
+        "description": "Runs the python len() function on the input. If a string is provided, returns the number of characters. If a list is provided, returns the number of items.",
+        "body": [
+            "{{ \"hello\"|count }} \n"
+        ]
+    },
+    "cut": {
+        "prefix": "|cut",
+        "description": "Removes all values of arg from the given string.",
+        "body": [
+            "{{ value|cut:\" \" }}"
+        ]
+    },
+    "date": {
+        "prefix": "|date",
+        "description": "Formats a date according to the given format.",
+        "body": [
+            "{{ value|date:\"D d M Y\" }}"
+        ]
+    },
+    "datetime_from_string": {
+        "prefix": "|datetime_from_string",
+        "description": "Parses the provided ISO 8601 datetime string into a python datetime object. If the string is not parsable, it is returned as is.",
+        "body": [
+            "{{ \"2022-07-22\"|datetime_from_string }}{{ \"2022-07-22T21:00:52\"|datetime_from_string }}"
+        ]
+    },
+    "default": {
+        "prefix": "|default",
+        "description": "If value evaluates to False, uses the given default. Otherwise, uses the\nvalue.",
+        "body": [
+            "{{ value|default:\"nothing\" }}"
+        ]
+    },
+    "default_if_none": {
+        "prefix": "|default_if_none",
+        "description": "If (and only if) value is None, uses the given default. Otherwise, uses the\nvalue.",
+        "body": [
+            "{{ value|default_if_none:\"nothing\" }}"
+        ]
+    },
+    "dictfilter": {
+        "prefix": "|dictfilter",
+        "description": "Filters a dictionary to match the criteria of an argument. The argument is a string representing an infix operation in the following format:",
+        "body": [
+            "{{ [{'a': 2}, {'a': 3}]|dictfilter:\"a>2\" }} \n"
+        ]
+    },
+    "dictsort": {
+        "prefix": "|dictsort",
+        "description": "Takes a list of dictionaries and returns that list sorted by the key given in\nthe argument.",
+        "body": [
+            "{{ value|dictsort:\"name\" }}"
+        ]
+    },
+    "dictsortreversed": {
+        "prefix": "|dictsortreversed",
+        "description": "Takes a list of dictionaries and returns that list sorted in reverse order by\nthe key given in the argument. This works exactly the same as the above filter,\nbut the returned value will be in reverse order.",
+        "body": [
+            "{{ value|dictsortreversed:\"name\" }}"
+        ]
+    },
+    "divide": {
+        "prefix": "|divide",
+        "description": "Divides a number by a given number. If the input is not divisible, the return value is 0.0.",
+        "body": [
+            "{{ \"10\"|divide:\"2\" }}"
+        ]
+    },
+    "divisibleby": {
+        "prefix": "|divisibleby",
+        "description": "Returns True if the value is divisible by the argument.",
+        "body": [
+            "{{ value|divisibleby:\"3\" }}"
+        ]
+    },
+    "downcase": {
+        "prefix": "|downcase",
+        "description": "Given a string, returns it with all characters in lowercase.",
+        "body": [
+            "escape"
+        ]
+    },
+    "escape": {
+        "prefix": "|escape",
+        "description": "Escapes a string's HTML. Specifically, it makes these replacements:",
+        "body": [
+            "{% autoescape off %}   {{ title|escape }}{% endautoescape %}"
+        ]
+    },
+    "escape_once": {
+        "prefix": "|escape_once",
+        "description": "Given a string, returns it with ampersands, quotes, and angle brackets encoded for use in HTML. It does not change characters that have already been escaped.",
+        "body": [
+            "{{ '<p>Hello</p>'|escape_once }} \n"
+        ]
+    },
+    "escapeseq": {
+        "prefix": "|escapeseq",
+        "description": "Applies the escape filter to each element of a sequence. Useful in\nconjunction with other filters that operate on sequences, such as\njoin. For example:",
+        "body": [
+            "{% autoescape off %}    {{ my_list|escapeseq|join:\", \" }}{% endautoescape %}"
+        ]
+    },
+    "filesizeformat": {
+        "prefix": "|filesizeformat",
+        "description": "Formats the value like a 'human-readable' file size (i.e. '13 KB',\n'4.1 MB', '102 bytes', etc.).",
+        "body": [
+            "{{ value|filesizeformat }}"
+        ]
+    },
+    "find_replace": {
+        "prefix": "|find_replace",
+        "description": "Takes a string and a replacement clause (string) separated by a pipe. Returns a string with all the specified values replaced.",
+        "body": [
+            "find_replace"
+        ]
+    },
+    "first": {
+        "prefix": "|first",
+        "description": "Returns the first item in a list.",
+        "body": [
+            "{{ value|first }}"
+        ]
+    },
+    "floatadd": {
+        "prefix": "|floatadd",
+        "description": "Adds a number to the variable's value. If any error occurs, the return value is an empty string \"\".",
+        "body": [
+            "{{ 1|floatadd:1.1 }}"
+        ]
+    },
+    "floatformat": {
+        "prefix": "|floatformat",
+        "description": "When used without an argument, rounds a floating-point number to one decimal\nplace – but only if there's a decimal part to be displayed. For example:",
+        "body": [
+            "{{ 5.0003|floatformat:2 }}"
+        ]
+    },
+    "floatsub": {
+        "prefix": "|floatsub",
+        "description": "Subtracts a number from the variable's value. If any error occurs, the return value is an empty string \"\".",
+        "body": [
+            "{{ 1.1|floatsub:1 }}"
+        ]
+    },
+    "floor": {
+        "prefix": "|floor",
+        "description": "Given a number, rounds it down to the nearest integer.",
+        "body": [
+            "{{ 5.9|floor }}"
+        ]
+    },
+    "force_escape": {
+        "prefix": "|force_escape",
+        "description": "Applies HTML escaping to a string (see the escape filter for\ndetails). This filter is applied immediately and returns a new, escaped\nstring. This is useful in the rare cases where you need multiple escaping or\nwant to apply other filters to the escaped results. Normally, you want to use\nthe escape filter.",
+        "body": [
+            "{% autoescape off %}    {{ body|linebreaks|force_escape }}{% endautoescape %}"
+        ]
+    },
+    "format_date_string": {
+        "prefix": "|format_date_string",
+        "description": "Formats a date variable as a string following this format: Feb. 11, 2016, 4:46 p.m.",
+        "body": [
+            "{{ \"12/26/1993\"|format_date_string }}"
+        ]
+    },
+    "get_digit": {
+        "prefix": "|get_digit",
+        "description": "Given a whole number, returns the requested digit, where 1 is the right-most\ndigit, 2 is the second-right-most digit, etc. Returns the original value for\ninvalid input (if input or argument is not an integer, or if argument is less\nthan 1). Otherwise, output is always an integer.",
+        "body": [
+            "{{ value|get_digit:\"2\" }}"
+        ]
+    },
+    "httpize": {
+        "prefix": "|httpize",
+        "description": "Prepends http:// to an address, if not already present. Does not prepend to an address already starting with http or https.",
+        "body": [
+            "{{ \"domain.com\"|httpize }} \n"
+        ]
+    },
+    "httpsize": {
+        "prefix": "|httpsize",
+        "description": "Prepends https:// to an address, if not already present. Does not prepend to an address already starting with http or https.",
+        "body": [
+            "{{ \"domain.com\"|httpsize }} \n"
+        ]
+    },
+    "iriencode": {
+        "prefix": "|iriencode",
+        "description": "Converts an IRI (Internationalized Resource Identifier) to a string that is\nsuitable for including in a URL. This is necessary if you're trying to use\nstrings containing non-ASCII characters in a URL.",
+        "body": [
+            "{{ value|iriencode }}"
+        ]
+    },
+    "join": {
+        "prefix": "|join",
+        "description": "Joins a list with a string, like Python's str.join(list)",
+        "body": [
+            "{{ value|join:\" // \" }}"
+        ]
+    },
+    "last": {
+        "prefix": "|last",
+        "description": "Returns the last item in a list.",
+        "body": [
+            "{{ value|last }}"
+        ]
+    },
+    "length": {
+        "prefix": "|length",
+        "description": "Returns the length of the value. This works for both strings and lists.",
+        "body": [
+            "{{ value|length }}"
+        ]
+    },
+    "linenumbers": {
+        "prefix": "|linenumbers",
+        "description": "Displays text with line numbers.",
+        "body": [
+            "{{ value|linenumbers }}"
+        ]
+    },
+    "list_to_string": {
+        "prefix": "|list_to_string",
+        "description": "Converts a list into a string, with proper list punctuation. If a string is given, returns it as is.",
+        "body": [
+            "{{ event.arr|list_to_string }}"
+        ]
+    },
+    "list_where": {
+        "prefix": "|list_where",
+        "description": "Given a list of objects, returns a list of objects where the property is equal to the target value.",
+        "body": [
+            "{{ [{\"name\":\"a\"},{\"name\":\"B\"}]|list_where:\"name=a\" }}"
+        ]
+    },
+    "ljust": {
+        "prefix": "|ljust",
+        "description": "Left-aligns the value in a field of a given width.",
+        "body": [
+            "\"{{ value|ljust:\"10\" }}\"\n"
+        ]
+    },
+    "lookup": {
+        "prefix": "|lookup",
+        "description": "Given an object or a list, returns the attribute specified. In the case where a list is provided, returns the items at the specified index number.",
+        "body": [
+            "{{ person|lookup:\"first_name\" }}"
+        ]
+    },
+    "lower": {
+        "prefix": "|lower",
+        "description": "Converts a string into all lowercase.",
+        "body": [
+            "{{ value|lower }}"
+        ]
+    },
+    "lstrip": {
+        "prefix": "|lstrip",
+        "description": "Given a string, returns it with any leading whitespace removed.",
+        "body": [
+            "{{ \" Hello world \"|lstrip }} \n"
+        ]
+    },
+    "make_list": {
+        "prefix": "|make_list",
+        "description": "Returns the value turned into a list. For a string, it's a list of characters.\nFor an integer, the argument is cast to a string before creating a list.",
+        "body": [
+            "{{ value|make_list }}"
+        ]
+    },
+    "map": {
+        "prefix": "|map",
+        "description": "Given a list, returns a list of values from a specific property of the items in the list.",
+        "body": [
+            "{{ [{\"name\":\"a\"},{\"name\":\"B\"}]|map:\"name\" }}"
+        ]
+    },
+    "md5_hash": {
+        "prefix": "|md5_hash",
+        "description": "Converts the given value into an md5 hash. Returns an empty string on error.",
+        "body": [
+            "{{ \"hello\"|md5_hash}}"
+        ]
+    },
+    "minus": {
+        "prefix": "|minus",
+        "description": "Subtracts a number by a given number. If any error occurs, the return value is an empty string \"\".",
+        "body": [
+            "{{ 1.1|minus:1 }} \n"
+        ]
+    },
+    "missing_image": {
+        "prefix": "|missing_image",
+        "description": "If a provided image is invalid, supplies a blank image, so that no error displays.",
+        "body": [
+            "{{ event.product.image_url|missing_image }}"
+        ]
+    },
+    "missing_product_image": {
+        "prefix": "|missing_product_image",
+        "description": "If a provided product image url is blank, supplies a placeholder image.",
+        "body": [
+            "{{ event.product.image_url|missing_image }}"
+        ]
+    },
+    "modulo": {
+        "prefix": "|modulo",
+        "description": "Returns the remainder of x divided by y.",
+        "body": [
+            "{{ 3|modulo:2 }}"
+        ]
+    },
+    "multiply": {
+        "prefix": "|multiply",
+        "description": "Multiplies a number by a given number. If the input is not a number, the return value is 0.0.",
+        "body": [
+            "{{ 10|multiply:2 }}"
+        ]
+    },
+    "newline_to_br": {
+        "prefix": "|newline_to_br",
+        "description": "Given a string, returns a string with HTML newline characters (e.g., \\r\\n) replaced with HTML line break characters (<br>).",
+        "body": [
+            "{{ \"hello\r\nworld\"|newline_to_br }}"
+        ]
+    },
+    "percentize": {
+        "prefix": "|percentize",
+        "description": "Converts a number to a percentage, with the number of decimal places specified in the argument. If no argument is included, 0 decimals will be shown.",
+        "body": [
+            "{{ \".25\"|percentize }} \n"
+        ]
+    },
+    "phone2numeric": {
+        "prefix": "|phone2numeric",
+        "description": "Converts a phone number (possibly containing letters) to its numerical\nequivalent.",
+        "body": [
+            "{{ value|phone2numeric }}"
+        ]
+    },
+    "pluralize": {
+        "prefix": "|pluralize",
+        "description": "Returns a plural suffix if the value is not 1, '1', or an object of\nlength 1. By default, this suffix is 's'.",
+        "body": [
+            "You have {{ num_messages }} message{{ num_messages|pluralize }}."
+        ]
+    },
+    "plus": {
+        "prefix": "|plus",
+        "description": "Adds a number to the variable's value. If any error occurs, the return value is an empty string \"\".",
+        "body": [
+            "{{ 25|plus:2 }}"
+        ]
+    },
+    "prepend": {
+        "prefix": "|prepend",
+        "description": "Given a string, returns a string with the target string prepended to it.",
+        "body": [
+            "{{ \"hello\"|prepend:\"world \" }} \n"
+        ]
+    },
+    "random": {
+        "prefix": "|random",
+        "description": "Returns a random item from the given list.",
+        "body": [
+            "{{ value|random }}"
+        ]
+    },
+    "remainder": {
+        "prefix": "|remainder",
+        "description": "Returns the remainder of x divided by y.",
+        "body": [
+            "{{ 5|remainder:2 }} \n"
+        ]
+    },
+    "remove": {
+        "prefix": "|remove",
+        "description": "Given a string, returns a string with all occurrences of the target substring removed.",
+        "body": [
+            "{{ \"hello world, hello\"|remove:\"hello\" }} \n"
+        ]
+    },
+    "remove_first": {
+        "prefix": "|remove_first",
+        "description": "Given a string, returns a string with first occurrence of the target substring removed.",
+        "body": [
+            "{{ \"hello world, hello\"|remove_first:\"hello\" }} \n"
+        ]
+    },
+    "remove_last": {
+        "prefix": "|remove_last",
+        "description": "Given a string, returns a string with last occurrence of the target substring removed.",
+        "body": [
+            "{{ \"hello world, hello\"|remove_last:\"hello\" }} \n"
+        ]
+    },
+    "replace": {
+        "prefix": "|replace",
+        "description": "Takes a string and a replacement clause (string) separated by a pipe. Returns a string with all the specified values replaced.",
+        "body": [
+            "{{ \"Hi, there,\"|find_replace: , \"|-\" }}"
+        ]
+    },
+    "replace_first": {
+        "prefix": "|replace_first",
+        "description": "Takes a string and a replacement clause (string) separated by a pipe. Returns a string with only the first occurrence of the specified value replaced.",
+        "body": [
+            "{{ \"Hi, there,\"|replace_first:\",|-\" }}"
+        ]
+    },
+    "replace_last": {
+        "prefix": "|replace_last",
+        "description": "Takes a string and a replacement clause (string) separated by a pipe. Returns a string with only the last occurrence of the specified value replaced.",
+        "body": [
+            "{{ \"Hi, there,\"|replace_last:\",|-\" }}"
+        ]
+    },
+    "resplit": {
+        "prefix": "|resplit",
+        "description": "Splits a string based on the given regex pattern.",
+        "body": [
+            "{{ \"apple banana\\n orange\"|resplit:'\\s+' }} \n"
+        ]
+    },
+    "reverse": {
+        "prefix": "|reverse",
+        "description": "Given a list, returns a list in reverse order.",
+        "body": [
+            "{{ [3,1,2,2]|reverse }} \n"
+        ]
+    },
+    "rjust": {
+        "prefix": "|rjust",
+        "description": "Right-aligns the value in a field of a given width.",
+        "body": [
+            "\"{{ value|rjust:\"10\" }}\"\n"
+        ]
+    },
+    "round": {
+        "prefix": "|round",
+        "description": "Given a number, rounds it to the nearest integer.",
+        "body": [
+            "{{ 5.01|round }} \n"
+        ]
+    },
+    "round_down": {
+        "prefix": "|round_down",
+        "description": "Rounds down the given number to the nearest integer. Optionally, a decimal place can be specified to change the rounding behavior.",
+        "body": [
+            "{{ 5|round_down }} \n"
+        ]
+    },
+    "round_up": {
+        "prefix": "|round_up",
+        "description": "Returns the ceiling of x, which is the largest integer greater than or equal to x.",
+        "body": [
+            "{{ 5|round_up }} \n"
+        ]
+    },
+    "rstrip": {
+        "prefix": "|rstrip",
+        "description": "Given a string, returns it with any trailing whitespace removed.",
+        "body": [
+            "{{ \" Hello world \"|rstrip }} \n"
+        ]
+    },
+    "safe": {
+        "prefix": "|safe",
+        "description": "Marks a string as not requiring further HTML escaping prior to output. When\nautoescaping is off, this filter has no effect.",
+        "body": [
+            "{{ var|safe|escape }}"
+        ]
+    },
+    "safeseq": {
+        "prefix": "|safeseq",
+        "description": "Applies the safe filter to each element of a sequence. Useful in\nconjunction with other filters that operate on sequences, such as\njoin. For example:",
+        "body": [
+            "{{ some_list|safeseq|join:\", \" }}"
+        ]
+    },
+    "sha_1": {
+        "prefix": "|sha_1",
+        "description": "Converts the given value into a sha1 hash. Returns an empty string on error.",
+        "body": [
+            "{{ \"hello\"|sha_1}}"
+        ]
+    },
+    "sha_256": {
+        "prefix": "|sha_256",
+        "description": "Converts the given value into a sha256 hash. Returns an empty string on error.",
+        "body": [
+            "{{ \"hello\"|sha_256}}"
+        ]
+    },
+    "size": {
+        "prefix": "|size",
+        "description": "Runs the python len() function on the input. If a string is provided, returns the number of characters. If a list is provided, returns the number of items.",
+        "body": [
+            "{{ 'hello world'|size }}"
+        ]
+    },
+    "slice": {
+        "prefix": "|slice",
+        "description": "Returns a slice of the list.",
+        "body": [
+            "{{ some_list|slice:\":2\" }}"
+        ]
+    },
+    "slugify": {
+        "prefix": "|slugify",
+        "description": "Converts to ASCII. Converts spaces to hyphens. Removes characters that aren't\nalphanumerics, underscores, or hyphens. Converts to lowercase. Also strips\nleading and trailing whitespace.",
+        "body": [
+            "{{ value|slugify }}"
+        ]
+    },
+    "sort": {
+        "prefix": "|sort",
+        "description": "Given a list, returns it in sorted ascending order. This is case-sensitive. If a property is provided, it will sort the list of objects by the property.",
+        "body": [
+            "{{ [3,3,-1,2]|sort }} \n"
+        ]
+    },
+    "sort_natural": {
+        "prefix": "|sort_natural",
+        "description": "Given a list, returns it in sorted ascending order. This is case-insensitive. If a property is provided, it will sort the list of objects by the property.",
+        "body": [
+            "{{ [{\"name\":\"B\"},{\"name\":\"a\"}]|sort_natural:\"name\" }}"
+        ]
+    },
+    "split": {
+        "prefix": "|split",
+        "description": "Splits a string into a list of substrings based on a given separator.",
+        "body": [
+            "{{ \"apple,orange,banana\"|split:\",\" }}"
+        ]
+    },
+    "stringformat": {
+        "prefix": "|stringformat",
+        "description": "Formats the variable according to the argument, a string formatting specifier.\nThis specifier uses the printf-style String Formatting syntax, with the exception\nthat the leading “%” is dropped.",
+        "body": [
+            "{{ value|stringformat:\"E\" }}"
+        ]
+    },
+    "strip": {
+        "prefix": "|strip",
+        "description": "Given a string, returns it with any leading and trailing whitespace removed.",
+        "body": [
+            "{{ \"    Hello world \"|strip }} \n"
+        ]
+    },
+    "strip_html": {
+        "prefix": "|strip_html",
+        "description": "Given a string, returns it with all HTML tags removed.",
+        "body": [
+            "{{ \"<h1>Hello world</h1>\"|strip_html }}"
+        ]
+    },
+    "strip_newlines": {
+        "prefix": "|strip_newlines",
+        "description": "Given a string, returns it with all newlines removed.",
+        "body": [
+            "{{ \"Hello\\nWorld\\r\\n\"|strip_newlines }} \n"
+        ]
+    },
+    "striptags": {
+        "prefix": "|striptags",
+        "description": "Makes all possible efforts to strip all [X]HTML tags.",
+        "body": [
+            "{{ value|striptags }}"
+        ]
+    },
+    "sum_list": {
+        "prefix": "|sum_list",
+        "description": "Sums all the values in a list.",
+        "body": [
+            "{{ [1,2,3,4,5]|sum_list }} \n"
+        ]
+    },
+    "time": {
+        "prefix": "|time",
+        "description": "Formats a time according to the given format.",
+        "body": [
+            "{{ value|time:\"H:i\" }}"
+        ]
+    },
+    "timesince": {
+        "prefix": "|timesince",
+        "description": "Formats a date as the time since that date (e.g., “4 days, 6 hours”).",
+        "body": [
+            "{{ blog_date|timesince:comment_date }}"
+        ]
+    },
+    "timeuntil": {
+        "prefix": "|timeuntil",
+        "description": "Similar to timesince, except that it measures the time from now until the\ngiven date or datetime. For example, if today is 1 June 2006 and\nconference_date is a date instance holding 29 June 2006, then\n{{ conference_date|timeuntil }} will return “4 weeks”.",
+        "body": [
+            "{{ conference_date|timeuntil:from_date }}"
+        ]
+    },
+    "title": {
+        "prefix": "|title",
+        "description": "Converts a string into titlecase by making words start with an uppercase\ncharacter and the remaining characters lowercase. This tag makes no effort to\nkeep “trivial words” in lowercase.",
+        "body": [
+            "{{ value|title }}"
+        ]
+    },
+    "trim_slash": {
+        "prefix": "|trim_slash",
+        "description": "Removes a trailing slash in the given string.",
+        "body": [
+            "{{ \"https://domain.com/\"|trim_slash }} \n"
+        ]
+    },
+    "truncate": {
+        "prefix": "|truncate",
+        "description": "Given a string, returns a string that is truncated with an ellipsis appended. The default truncated length is 50 characters.",
+        "body": [
+            "{{ \"Hello world\"|truncate }} \n"
+        ]
+    },
+    "truncatechars": {
+        "prefix": "|truncatechars",
+        "description": "Truncates a string if it is longer than the specified number of characters.\nTruncated strings will end with a translatable ellipsis character (”…”).",
+        "body": [
+            "{{ value|truncatechars:7 }}"
+        ]
+    },
+    "truncatechars_html": {
+        "prefix": "|truncatechars_html",
+        "description": "Similar to truncatechars, except that it is aware of HTML tags. Any\ntags that are opened in the string and not closed before the truncation point\nare closed immediately after the truncation.",
+        "body": [
+            "{{ value|truncatechars_html:7 }}"
+        ]
+    },
+    "truncatewords": {
+        "prefix": "|truncatewords",
+        "description": "Truncates a string after a certain number of words.",
+        "body": [
+            "{{ value|truncatewords:2 }}"
+        ]
+    },
+    "truncatewords_html": {
+        "prefix": "|truncatewords_html",
+        "description": "Similar to truncatewords, except that it is aware of HTML tags. Any\ntags that are opened in the string and not closed before the truncation point,\nare closed immediately after the truncation.",
+        "body": [
+            "{{ value|truncatewords_html:2 }}"
+        ]
+    },
+    "uniq": {
+        "prefix": "|uniq",
+        "description": "Given a list, returns a list without any duplicates. If a property is provided, it will remove duplicates based on the property.",
+        "body": [
+            "{{ [3,1,2,2]|uniq }}"
+        ]
+    },
+    "upcase": {
+        "prefix": "|upcase",
+        "description": "Given a string, returns it with all characters in uppercase.",
+        "body": [
+            "{{ \"mY FIRST poST\"|upcase }}"
+        ]
+    },
+    "upper": {
+        "prefix": "|upper",
+        "description": "Converts a string into all uppercase.",
+        "body": [
+            "{{ value|upper }}"
+        ]
+    },
+    "urldecode": {
+        "prefix": "|urldecode",
+        "description": "URL-decodes the given string.",
+        "body": [
+            "{{ %5BHello%20World%5D|urldecode }}"
+        ]
+    },
+    "urldecodeplus": {
+        "prefix": "|urldecodeplus",
+        "description": "URL-decodes the given string and also replaces plus signs with spaces.",
+        "body": [
+            "{{ %5BHello+World%5D|urldecode }}"
+        ]
+    },
+    "urlencode": {
+        "prefix": "|urlencode",
+        "description": "Escapes a value for use in a URL.",
+        "body": [
+            "{{ value|urlencode }}"
+        ]
+    },
+    "urlencodeplus": {
+        "prefix": "|urlencodeplus",
+        "description": "Similar to the urlencode filter but encodes spaces using the + character as opposed to %20. If not provided, the / character is assumed safe. An empty string can be provided when all characters should be escaped.",
+        "body": [
+            "{{ '[Hello / World]'|urlencodeplus }}"
+        ]
+    },
+    "urlize": {
+        "prefix": "|urlize",
+        "description": "Converts URLs and email addresses in text into clickable links.",
+        "body": [
+            "{{ value|urlize }}"
+        ]
+    },
+    "urlizetrunc": {
+        "prefix": "|urlizetrunc",
+        "description": "Converts URLs and email addresses into clickable links just like urlize, but\ntruncates URLs longer than the given character limit.",
+        "body": [
+            "{{ value|urlizetrunc:15 }}"
+        ]
+    },
+    "wordcount": {
+        "prefix": "|wordcount",
+        "description": "Returns the number of words.",
+        "body": [
+            "{{ value|wordcount }}"
+        ]
+    },
+    "wordwrap": {
+        "prefix": "|wordwrap",
+        "description": "Wraps words at specified line length.",
+        "body": [
+            "{{ value|wordwrap:5 }}"
+        ]
+    },
+    "yesno": {
+        "prefix": "|yesno",
+        "description": "Maps values for True, False, and (optionally) None, to the strings\n“yes”, “no”, “maybe”, or a custom mapping passed as a comma-separated list, and\nreturns one of those strings according to the value:",
+        "body": [
+            "{{ value|yesno:\"yeah,no,maybe\" }}"
+        ]
+    }
+}

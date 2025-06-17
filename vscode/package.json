@@ -1,0 +1,95 @@
+{
+  "name": "headless-klaviyo",
+  "displayName": "headless-klaviyo",
+  "description": "Enhancements for using Klaviyo",
+  "repository": "https://github.com/klaviyo/headless-klaviyo",
+  "version": "0.1.0",
+  "publisher": "klaviyo",
+  "engines": {
+    "vscode": "^1.94.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./extension.js",
+  "contributes": {
+    "snippets": [
+      {
+          "language": "html",
+          "path": "./snippets/django_extras.json"
+      },
+      {
+          "language": "html",
+          "path": "./snippets/django_filters.json"
+      },
+      {
+          "language": "html",
+          "path": "./snippets/django_tags.json"
+      },
+      {
+          "language": "django-html",
+          "path": "./snippets/django_extras.json"
+      },
+      {
+          "language": "django-html",
+          "path": "./snippets/django_filters.json"
+      },
+      {
+          "language": "django-html",
+          "path": "./snippets/django_tags.json"
+      },
+      {
+          "language": "json",
+          "path": "./snippets/django_extras.json"
+      },
+      {
+          "language": "json",
+          "path": "./snippets/django_filters.json"
+      },
+      {
+          "language": "json",
+          "path": "./snippets/django_tags.json"
+      }
+    ],
+    "languages": [{
+        "id": "html",
+        "extensions": [ ".html" ],
+        "configuration": "./langconfig/language-configuration.json",
+        "icon": {
+          "light": "./images/icons/klaviyofavicon.png",
+          "dark": "./images/icons/klaviyofavicon.png"
+        }
+    },
+    {
+      "id": "django-html",
+      "extensions": [ ".html" ],
+      "configuration": "./langconfig/language-configuration.json",
+      "icon": {
+        "light": "./images/icons/klaviyofavicon.png",
+        "dark": "./images/icons/klaviyofavicon.png"
+      }
+    },
+    {
+      "id": "json",
+      "extensions": [ ".json" ],
+      "configuration": "./langconfig/language-configuration.json",
+      "icon": {
+        "light": "./images/icons/klaviyofavicon.png",
+        "dark": "./images/icons/klaviyofavicon.png"
+      }
+    }
+  ]},
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.94.0",
+    "@types/mocha": "^10.0.8",
+    "@types/node": "20.x",
+    "eslint": "^9.11.1",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1"
+  }
+}
