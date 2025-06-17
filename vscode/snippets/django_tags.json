@@ -1,0 +1,73 @@
+{
+  "catalog": {
+    "prefix": "catalog",
+    "body": [
+      "{% catalog ${itemID} %}",
+      "   <h3>{{ catalog_item.title }}</h3>",
+      "   <p>{{ catalog_item.price }}</p>",
+      "{% endcatalog %}"
+    ]
+  },
+  "unsubscribe": {
+    "prefix": "unsubscribe",
+    "body": ["{% unsubscribe \"click me to unsubscribe\" %}"]
+  },
+  "web_view": {
+    "prefix": "web_view",
+    "body": ["{% web_view \"click me to view this in web\" %}"]
+  },
+  "render_variable": {
+    "prefix": "render_variable",
+    "body": ["{% render_variable some_var %}"]
+  },
+  "barcode_code": {
+    "prefix": "barcode_code",
+    "body": ["{% barcode_code 'WELCOME10' %}"]
+  },
+  "coupon_code": {
+    "prefix": "coupon_code",
+    "body": ["{% coupon_code 'WELCOME10' %}"]
+  },
+  "current_day": {
+    "prefix": "current_day",
+    "body": ["{% current_day %}"]
+  },
+  "current_weekday": {
+    "prefix": "current_weekday",
+    "body": ["{% current_weekday %}"]
+  },
+  "current_month_name": {
+    "prefix": "current_month_name",
+    "body": ["{% current_month_name %}"]
+  },
+  "current_year": {
+    "prefix": "current_year",
+    "body": ["{% current_year %}"]
+  },
+  "currency_format": {
+    "prefix": "currency_format",
+    "body": ["{% currency_format 27 %}"]
+  },
+  "unsubscribe_link": {
+    "prefix": "unsubscribe_link",
+    "body": [
+        "<a style=\"color: red;\" href=\"{% unsubscribe_link %}\">Click me to unsubscribe</a>"
+    ]
+  },
+  "manage_preferences": {
+    "prefix": "manage_preferences",
+    "body": ["{% manage_preferences \"click me to manage preferences\" %}"]
+  },
+  "manage_preferences_link": {
+    "prefix": "manage_preferences_link",
+    "body": [
+      "<a style=\"color: red;\" href=\"{% manage_preferences_link %}\">Click me to manage preferences</a>"
+    ]
+  },  
+  "web_view_link": {
+    "prefix": "web_view_link",
+    "body": [
+      "<a style=\"color: red;\" href=\"{% web_view_link %}\">View on the web</a>"
+    ]
+  }
+}
