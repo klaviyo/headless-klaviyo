@@ -1,3 +1,4 @@
+import re
 import copy
 import csv
 import datetime
@@ -156,6 +157,9 @@ class KCLIState(object):
         elif resource_type == ResourceType.FLOW:
             flow_create_query = openapi_client.FlowCreateQuery(data=resource_data)
             response = self.klaviyo.Flows.create_flow(flow_create_query)
+        elif resource_type == ResourceType.PROFILE:
+            profile_create_query = openapi_client.ProfileCreateQuery(data=resource_data)
+            response = self.klaviyo.Profiles.create_profile(profile_create_query)
         else:
             raise ValueError('Unsupported resource type.')
         new_file_path = os.path.join(resource_path, f'{resource_type.value}-{response["data"]["id"]}.json')
@@ -576,3 +580,80 @@ def clean_resource_data(resource_type: ResourceType, resource_data: dict):
         del resource_data['attributes']['updated_at']
     else:
         del resource_data['attributes']['updated']
+
+
+def is_email_valid(email: str) -> bool:
+    """
+    Validates an email address using a regular expression and ensures the domain
+    is not one of the not-allowed domains.
+
+    Args:
+        email: The email address string to validate.
+
+    Returns:
+        True if the email is valid and the domain is not 'example.com',
+        False otherwise.
+    """
+    if not isinstance(email, str):
+        return False
+
+    email_regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+
+    if not re.match(email_regex, email):
+        return False
+
+    not_allowed_domains = ["example.com", "test.com", "demo.com"]
+
+    domain = email.split("@")[-1]
+    if domain.lower() in not_allowed_domains:
+        return False
+
+    return True
+
+
+def is_phone_number_valid(phone_number: str) -> bool:
+    """
+    Validates a phone number using a regular expression.
+    The phone number must start with '+' and follow E.164 format.
+
+    Args:
+        phone_number: The phone number string to validate.
+
+    Returns:
+        True if the phone number is valid, False otherwise.
+    """
+    if not isinstance(phone_number, str):
+        return False
+
+    phone_regex = r"^\+[1-9]\d{1,14}$"
+
+    return bool(re.match(phone_regex, phone_number))
+
+
+def deep_clean_dict(d: dict) -> dict:
+    """
+    Recursively removes keys from a dictionary whose values are None or empty strings.
+    Also cleans nested dictionaries and lists, omitting empty dictionaries and lists from the result.
+
+    Args:
+        d (dict): The dictionary to clean.
+
+    Returns:
+        dict: A new dictionary with all None and empty string values removed, including from nested structures.
+    """
+    cleaned_dict = {}
+    for key, value in d.items():
+        if isinstance(value, dict):
+            nested_dict = deep_clean_dict(value)
+            if nested_dict:
+                cleaned_dict[key] = nested_dict
+        elif isinstance(value, list):
+            cleaned_list = [
+                deep_clean_dict(item) if isinstance(item, dict) else item for item in value
+            ]
+            if cleaned_list:
+                cleaned_dict[key] = cleaned_list
+        elif value not in (None, ""):
+            cleaned_dict[key] = value
+
+    return cleaned_dict
