@@ -4,15 +4,29 @@ import os
 import rich_click as click
 import survey
 
+from dotenv import load_dotenv
+
 from kcli.constants import CAMPAIGN_CHANNELS, CAMPAIGN_GENERATE_CHANNELS, OverwriteMode, ResourceType, BLOCK_TYPES, \
     BLOCK_DISPLAY_OPTIONS, REPORT_TIMEFRAME_OPTIONS, REPORT_INTERVAL_OPTIONS, ReportResource, \
     REPORT_STATISTICS, ReportType, REPORT_GROUP_BY_OPTIONS
-from kcli.helpers import KCLIState, style_prompt_string, campaign_send_strategy_prompt, campaign_tracking_prompt, \
-    format_filename, statistics_prompt
+from kcli.helpers import (
+    KCLIState,
+    style_prompt_string,
+    campaign_send_strategy_prompt,
+    campaign_tracking_prompt,
+    format_filename,
+    statistics_prompt,
+    is_email_valid,
+    is_phone_number_valid,
+    deep_clean_dict,
+)
+
+from openapi_client.exceptions import ApiException
 
 click.rich_click.SHOW_ARGUMENTS = True
 click.rich_click.MAX_WIDTH = 120
 
+load_dotenv()
 
 def verbose_option(f):
     """Option to specify whether to use verbose output mode"""
@@ -32,15 +46,27 @@ def api_key_option(f):
     """Option to specify the Klaviyo private API key to use for API calls"""
 
     def callback(context, parameter, value):
-        if context.obj:
-            context.obj.api_key = value
-            context.obj.initialize_client()
-        else:
-            context.obj = KCLIState(api_key=value)
+        api_key = value or os.environ.get("KLAVIYO_API_KEY")
+        if not context.obj:
+            context.obj = KCLIState()
 
-    return click.option('--api-key', envvar='KLAVIYO_API_KEY', required=True, expose_value=False,
-                        help='Klaviyo account private API key', callback=callback,
-                        show_envvar=True)(f)
+        if not api_key:
+            raise click.UsageError(
+                "Klaviyo API key is required. Provide it with --api-key or set KLAVIYO_API_KEY in your environment or .env file."
+            )
+
+        context.obj.api_key = api_key
+        context.obj.initialize_client()
+
+    return click.option(
+        "--api-key",
+        envvar="KLAVIYO_API_KEY",
+        required=False,
+        expose_value=False,
+        help="Klaviyo account private API key",
+        callback=callback,
+        show_envvar=True,
+    )(f)
 
 
 def common_options(f):
@@ -400,6 +426,44 @@ def get(context):
     pass
 
 
+@cli.group()
+@click.pass_context
+def set(context):
+    """Set configuration options for the cli"""
+
+
+@set.command(name="api-key")
+@click.option(
+    "--api-key", prompt=True, hide_input=True, help="Klaviyo API key to use for API calls"
+)
+@click.pass_context
+def set_api_key(context, api_key: str):
+    """Set the Klaviyo API key to use for API calls and save it to .env file"""
+    env_path = os.path.join(os.getcwd(), ".env")
+    existing_lines = []
+
+    if os.path.isfile(env_path):
+        with open(env_path, "r", encoding="utf-8") as env_file:
+            existing_lines = env_file.readlines()
+
+        existing_lines = [
+            line for line in existing_lines if not line.strip().startswith("KLAVIYO_API_KEY=")
+        ]
+
+    existing_lines.append(f"KLAVIYO_API_KEY={api_key}\n")
+
+    with open(env_path, "w", encoding="utf-8") as env_file:
+        env_file.writelines(existing_lines)
+
+    if context.obj is None:
+        context.obj = KCLIState(api_key=api_key)
+    else:
+        context.obj.api_key = api_key
+
+    context.obj.initialize_client()
+    context.obj.info_message(f"Klaviyo API key set and saved to .env file at {env_path}", bold=True)
+
+
 @get.command(name='segments')
 @common_options
 @write_options(ResourceType.SEGMENT)
@@ -620,6 +684,154 @@ def update_block(context, block_file, block_id, block_path):
 def generate(context):
     """Create a local resource definition file"""
     pass
+
+
+@generate.command(name="profile")
+@common_options
+@path_options(ResourceType.PROFILE)
+@click.pass_context
+def generate_profile(context, profile_path: str):
+    """Create a new local profile definition file. Provides interactive prompts for parameters not provided via command line options."""
+    click.secho(
+        "Enter the profile's first and last name. "
+        "If you enter more than two words, the first word will be used as the first name, "
+        "and all remaining words as the last name.",
+        fg="yellow",
+    )
+
+    while True:
+        full_name = survey.routines.input(
+            "Enter the profile's full name (first and last): "
+        ).strip()
+        if not full_name:
+            click.secho("You must enter at least a first name.", fg="red")
+            continue
+
+        words = full_name.split()
+        if not words:
+            click.secho("You must enter at least a first name.", fg="red")
+            continue
+
+        first_name = words[0]
+        last_name = " ".join(words[1:]) if len(words) > 1 else ""
+
+        break
+
+    while True:
+        profile_email = survey.routines.input("Enter the profile's email address: ").strip()
+
+        if is_email_valid(profile_email):
+            break
+
+        click.secho("Invalid email address. Please enter a valid email.", fg="red")
+
+    while True:
+        profile_phone = survey.routines.input(
+            "Enter the profile's phone number (optional): "
+        ).strip()
+        if is_phone_number_valid(profile_phone) or profile_phone == "":
+            break
+
+    while True:
+        profile_custom_property = (
+            survey.routines.input("Would you like to add a custom property later? (yes/no): ")
+            .strip()
+            .lower()
+        )
+        if profile_custom_property in ["yes", "y"]:
+            profile_custom_property = True
+            break
+        elif profile_custom_property in ["no", "n"]:
+            profile_custom_property = False
+            break
+        click.secho("Invalid input. Please enter 'yes' or 'no'.", fg="red")
+
+    profile_data = {
+        "type": "profile",
+        "attributes": {
+            "email": profile_email,
+            "phone_number": profile_phone,
+            "first_name": first_name,
+            "last_name": last_name,
+            "organization": "",
+            "locale": "",
+            "title": "",
+            "image": "",
+            "location": {
+                "address1": "",
+                "address2": "",
+                "city": "",
+                "country": "",
+                "latitude": "",
+                "longitude": "",
+                "region": "",
+                "zip": "",
+                "timezone": "",
+                "ip": "",
+            },
+            "properties": {},
+        },
+    }
+
+    if profile_custom_property:
+        profile_data["attributes"]["properties"]["example_custom_property"] = "custom_value"
+
+    profile_file = context.obj.write_generated_data_to_file(
+        ResourceType.PROFILE, profile_data, profile_path
+    )
+    click.echo(f"Generated profile definition written to {format_filename(profile_file)}")
+
+
+@create.command(name="profile")
+@common_options
+@path_options(ResourceType.PROFILE)
+@read_options(ResourceType.PROFILE, False)
+@click.pass_context
+def create_profile(context, profile_file: str, profile_path: str):
+    """Push a new local profile definition to Klaviyo"""
+    if not profile_file or not os.path.isfile(profile_file):
+        raise click.UsageError("A valid profile file must be provided.")
+
+    with open(profile_file, "r", encoding="utf-8") as f:
+        try:
+            profile_data = json.load(f)
+        except json.JSONDecodeError:
+            raise click.UsageError(f"Invalid JSON in profile file: {profile_file}")
+
+    attributes = profile_data.get("attributes", {})
+    cleaned_attributes = deep_clean_dict(attributes)
+    profile_data["attributes"] = cleaned_attributes
+
+    if not cleaned_attributes.get("email") and not cleaned_attributes.get("phone_number"):
+        raise click.UsageError("Profile must have at least an email or phone number.")
+
+    if not cleaned_attributes.get("first_name"):
+        raise click.UsageError("Profile must have a first name.")
+
+    tmp_profile_file = None
+    try:
+        tmp_profile_file = context.obj.write_generated_data_to_file(
+            ResourceType.PROFILE, profile_data, profile_path
+        )
+        context.obj.create_resource(ResourceType.PROFILE, tmp_profile_file, profile_path)
+    except ApiException as e:
+        # Didn't find any error recovery function in the codebase, so created something simple instead.
+        # In the future it will be possible to implement a more robust error handling.
+        try:
+            error_body = json.loads(e.body)
+            detail = error_body.get("errors", [{}])[0].get("detail")
+
+            if detail:
+                raise click.UsageError(f"Failed to create profile: {detail}")
+            else:
+                raise click.UsageError(f"Failed to create profile: {e.body}")
+        except (json.JSONDecodeError, IndexError, KeyError):
+            raise click.UsageError(
+                f"API Conflict Error: A profile may already exist. (Status: {e.status})"
+            )
+    finally:
+        if tmp_profile_file and os.path.isfile(tmp_profile_file):
+            os.remove(tmp_profile_file)
 
 
 @generate.command(name='campaign')

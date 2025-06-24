@@ -13,6 +13,7 @@ class ResourceType(Enum):
     FLOW = 'flow'
     CAMPAIGN = 'campaign'
     ALL = 'all'
+    PROFILE = "profile"
 
 class ReportResource(Enum):
     SEGMENT = 'segment'

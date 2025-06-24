@@ -2,3 +2,4 @@ rich
 rich-click
 survey
 klaviyo-api
+python-dotenv
