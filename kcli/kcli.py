@@ -4,6 +4,8 @@ import os
 import rich_click as click
 import survey
 
+from dotenv import load_dotenv
+
 from kcli.constants import CAMPAIGN_CHANNELS, CAMPAIGN_GENERATE_CHANNELS, OverwriteMode, ResourceType, BLOCK_TYPES, \
     BLOCK_DISPLAY_OPTIONS, REPORT_TIMEFRAME_OPTIONS, REPORT_INTERVAL_OPTIONS, ReportResource, \
     REPORT_STATISTICS, ReportType, REPORT_GROUP_BY_OPTIONS
@@ -13,6 +15,7 @@ from kcli.helpers import KCLIState, style_prompt_string, campaign_send_strategy_
 click.rich_click.SHOW_ARGUMENTS = True
 click.rich_click.MAX_WIDTH = 120
 
+load_dotenv()
 
 def verbose_option(f):
     """Option to specify whether to use verbose output mode"""
@@ -32,15 +35,27 @@ def api_key_option(f):
     """Option to specify the Klaviyo private API key to use for API calls"""
 
     def callback(context, parameter, value):
-        if context.obj:
-            context.obj.api_key = value
-            context.obj.initialize_client()
-        else:
-            context.obj = KCLIState(api_key=value)
+        api_key = value or os.environ.get("KLAVIYO_API_KEY")
+        if not context.obj:
+            context.obj = KCLIState()
 
-    return click.option('--api-key', envvar='KLAVIYO_API_KEY', required=True, expose_value=False,
-                        help='Klaviyo account private API key', callback=callback,
-                        show_envvar=True)(f)
+        if not api_key:
+            raise click.UsageError(
+                "Klaviyo API key is required. Provide it with --api-key or set KLAVIYO_API_KEY in your environment or .env file."
+            )
+
+        context.obj.api_key = api_key
+        context.obj.initialize_client()
+
+    return click.option(
+        "--api-key",
+        envvar="KLAVIYO_API_KEY",
+        required=False,
+        expose_value=False,
+        help="Klaviyo account private API key",
+        callback=callback,
+        show_envvar=True,
+    )(f)
 
 
 def common_options(f):
