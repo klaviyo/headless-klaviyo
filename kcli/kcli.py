@@ -738,8 +738,11 @@ def generate_profile(context, profile_path: str):
             .strip()
             .lower()
         )
-        if profile_custom_property in ["yes", "no", "y", "n"]:
+        if profile_custom_property in ["yes", "y"]:
             profile_custom_property = True
+            break
+        elif profile_custom_property in ["no", "n"]:
+            profile_custom_property = False
             break
         click.secho("Invalid input. Please enter 'yes' or 'no'.", fg="red")
 
