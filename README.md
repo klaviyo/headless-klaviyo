@@ -55,17 +55,27 @@ If you aren't sure what options and arguments to specify for a subcommand, use t
 klaviyo get campaigns --help
 ```
 
-Example command:
+Commands require a private API key to authenticate requests to Klaviyo. See [how to create a private API key](https://help.klaviyo.com/hc/en-us/articles/7423954176283) for information.
+
+**The recommended way to configure your API key is to run the `set api-key` command:**
+
+```bash
+klaviyo set api-key
+```
+
+This will prompt you for your key and save it to a `.env` file in your current directory. The CLI will automatically use this key for all future commands.
+
+Alternatively, the API key can be specified for a single command with the `--api-key` option or by setting the `KLAVIYO_API_KEY` environment variable.
+
+Example command using the `--api-key` option:
 
 ```bash
 klaviyo get campaigns --overwrite-mode keep-local --api-key pk_0000
 ```
 
-Commands require a private API key to authenticate requests to Klaviyo. See [how to create a private API key](https://help.klaviyo.com/hc/en-us/articles/7423954176283) for information. The API key can be specified with the `--api-key` command or by setting the `KLAVIYO_API_KEY` environment variable.
-
 # Command listing
 
-The following examples omit the `--api-key` command and assume that you have set the `KLAVIYO_API_KEY` environment variable.
+The following examples assume that you have set the `KLAVIYO_API_KEY` using the `klaviyo set api-key` command or by setting the `KLAVIYO_API_KEY` environment variable.
 
 ## `get`
 
@@ -99,6 +109,20 @@ If you want to retrieve all four supported resource types, use the `all` subcomm
 klaviyo get all --verbose
 ```
 
+## `set`
+
+The `set` command configures settings for the CLI.
+
+### `set api-key`
+
+This command securely prompts for your Klaviyo private API key and saves it to a `.env` file in the current working directory. This is the recommended way to configure authentication, as you will not need to provide the key with every command.
+
+```bash
+klaviyo set api-key
+```
+
+You will be prompted to enter your API key, and the input will be hidden for security.
+
 ## `inspect`
 
 The `inspect` command outputs a table with information about a resource based on a local resource definition file. The supported subcommands are `block`, `campaign`, `flow`, and `segment`.
@@ -116,7 +140,7 @@ The folder that stores the definition files can be specified using the relevant 
 
 ## `generate`
 
-The `generate` command creates a local resource definition file for a new resource. The supported subcommands are `campaign` and `block`.
+The `generate` command creates a local resource definition file for a new resource. The supported subcommands are `campaign`, `profile` and `block`.
 
 These commands will prompt you for parameters that are not provided as command options. For example, the following command will create a campaign definition file with the name attribute "Test Campaign", and then will interactively prompt you to select the lists and segments to use for the campaign audience from those that exist in your Klaviyo account, the campaign send strategy, and other parameters:
 
@@ -130,7 +154,7 @@ Newly-created resources may require additional steps to utilize. For example, a 
 
 ## `create`
 
-The `create` command creates a new Klaviyo resource based on a local definition file. The supported subcommands are `block`, `campaign`, `flow`, and `segment`.
+The `create` command creates a new Klaviyo resource based on a local definition file. The supported subcommands are `block`, `profile`, `campaign`, `flow`, and `segment`.
 
 The file is specified with the `--segment-file` option for segments, and the equivalent for other resource types. After creating the resource, the result will be saved to a new file with its assigned ID in the specified resource path (e.g. for a segment, the path specified with `--segment-path`, default `segments`).
 
