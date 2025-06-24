@@ -400,6 +400,44 @@ def get(context):
     pass
 
 
+@cli.group()
+@click.pass_context
+def set(context):
+    """Set configuration options for the cli"""
+
+
+@set.command(name="api-key")
+@click.option(
+    "--api-key", prompt=True, hide_input=True, help="Klaviyo API key to use for API calls"
+)
+@click.pass_context
+def set_api_key(context, api_key: str):
+    """Set the Klaviyo API key to use for API calls and save it to .env file"""
+    env_path = os.path.join(os.getcwd(), ".env")
+    existing_lines = []
+
+    if os.path.isfile(env_path):
+        with open(env_path, "r", encoding="utf-8") as env_file:
+            existing_lines = env_file.readlines()
+
+        existing_lines = [
+            line for line in existing_lines if not line.strip().startswith("KLAVIYO_API_KEY=")
+        ]
+
+    existing_lines.append(f"KLAVIYO_API_KEY={api_key}\n")
+
+    with open(env_path, "w", encoding="utf-8") as env_file:
+        env_file.writelines(existing_lines)
+
+    if context.obj is None:
+        context.obj = KCLIState(api_key=api_key)
+    else:
+        context.obj.api_key = api_key
+
+    context.obj.initialize_client()
+    context.obj.info_message(f"Klaviyo API key set and saved to .env file at {env_path}", bold=True)
+
+
 @get.command(name='segments')
 @common_options
 @write_options(ResourceType.SEGMENT)
