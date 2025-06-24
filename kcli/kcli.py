@@ -808,6 +808,7 @@ def create_profile(context, profile_file: str, profile_path: str):
     if not cleaned_attributes.get("first_name"):
         raise click.UsageError("Profile must have a first name.")
 
+    tmp_profile_file = None
     try:
         tmp_profile_file = context.obj.write_generated_data_to_file(
             ResourceType.PROFILE, profile_data, profile_path
