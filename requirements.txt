@@ -20,10 +20,12 @@ pydantic_core==2.27.2
 Pygments==2.19.1
 pyproject_hooks==1.2.0
 python-dateutil==2.9.0.post0
+python-dotenv==1.1.1
 PyYAML==6.0.2
 requests==2.32.3
 rich==13.9.4
 rich-click==1.8.6
+setuptools==80.9.0
 six==1.17.0
 survey==5.4.2
 tenacity==9.0.0
